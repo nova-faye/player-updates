@@ -1,25 +1,9 @@
-# Player — Version 1.2.1
+## Version 1.3.0
 
-### Fix Release
+### New
+- **New home screen:** on launch you now see the last episode you watched, then your recently watched episodes, then the rest of the folder's episodes you haven't watched yet. Click any episode to play it.
+- **Themes:** 8 classic, familiar themes: Dark, Light, Dracula, Nord, Solarized Dark, Solarized Light, Gruvbox and Catppuccin. Change it from Settings. The video background always stays black.
 
-A small maintenance update focused on fixing the automatic update process. No new features have been added.
-
----
-
-### What's Fixed
-
-- **Update Check:** Fixed the `app-update.yml` error that appeared when checking for updates.
-- **Automatic Updates:** Adjusted the application files to resolve issues with the updater.
-
-### Data & Settings
-
-Your existing **watch history** and **playback positions** remain intact. Nothing has changed in how the app works.
-
-### How to Update
-
-1. Download and install **v1.2.1** over your existing installation.
-2. Once installed, future updates can be performed directly through **Settings**.
-
----
-
-<sub>Version 1.2.1 · Maintenance Release</sub>
+### Notes
+- Your history, playback positions and settings are kept.
+- To update: Settings, then Check for updates, then Update now.
