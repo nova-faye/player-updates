@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veyra Player</title>
+<meta name="description" content="Veyra Player is a Windows video player with hidden controls, episode folders, resume and themes.">
+<meta name="theme-color" content="#1c1c24">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c1c24'/%3E%3Cpath d='M26 18v28l22-14z' fill='none' stroke='%23ad9d85' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #1c1c24;
+    --bg2: #16161d;
+    --card: #252530;
+    --line: rgba(173, 157, 133, .22);
+    --text: #ece6da;
+    --dim: #a09685;
+    --accent: #ad9d85;
+    --ink: #1c1c24;
+    /* change this one line to swap the heading font */
+    --display: "Orbitron", "Segoe UI", Tahoma, system-ui, sans-serif;
+    --body: "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.65;
+    background-image: radial-gradient(900px 420px at 50% -120px, rgba(173, 157, 133, .13), transparent 70%);
+    background-repeat: no-repeat;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .wrap { width: min(1080px, 100% - 40px); margin-inline: auto; }
+  section { padding-block: clamp(56px, 9vw, 104px); scroll-margin-top: 64px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: .01em; line-height: 1.2; margin: 0; }
+  h2 { font-size: clamp(24px, 4vw, 34px); }
+  .eyebrow { color: var(--accent); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px; }
+  [dir="rtl"] .eyebrow { letter-spacing: 0; }
+  .lead { color: var(--dim); font-size: clamp(16px, 2vw, 19px); max-width: 56ch; margin: 18px 0 0; }
+
+  /* header */
+  header { position: sticky; top: 0; z-index: 20; background: rgba(28, 28, 36, .82); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; gap: 22px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: .02em; }
+  .brand svg { width: 30px; height: 30px; }
+  nav { display: flex; gap: 22px; margin-inline-start: auto; font-size: 14px; color: var(--dim); }
+  nav a { text-decoration: none; }
+  nav a:hover { color: var(--text); }
+  .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .lang button { background: none; border: 0; color: var(--dim); font: inherit; font-size: 13px; padding: 5px 12px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { background: var(--accent); color: var(--ink); font-weight: 600; }
+
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 13px 24px; border-radius: 10px;
+    border: 1px solid var(--line); color: var(--text); text-decoration: none; font: inherit; font-weight: 600; cursor: pointer; background: transparent; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.08); color: var(--ink); }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(28px, 5vw, 64px); align-items: center; padding-block: clamp(48px, 8vw, 96px) clamp(40px, 6vw, 72px); }
+  h1 { font-size: clamp(32px, 5.4vw, 56px); }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .meta { color: var(--dim); font-size: 13px; margin-top: 14px; min-height: 20px; }
+  .rise { animation: rise .7s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  /* app mock */
+  .mock { background: var(--bg2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .45); }
+  .mock-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--dim); }
+  .mock-bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(173, 157, 133, .35); }
+  .mock-bar span { margin-inline-start: 8px; }
+  .mock-body { padding: 20px 20px 22px; background: var(--bg); }
+  .m-lbl { color: var(--accent); font-size: 11px; margin-bottom: 10px; }
+  .m-hero { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: rgba(236, 230, 218, .03); }
+  .m-th { aspect-ratio: 16 / 9; border-radius: 8px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #2c2c3a, #1a1a22 60%, #33302c); margin-bottom: 12px; }
+  .m-th svg, .m-r svg { width: 38px; height: 38px; opacity: .9; }
+  .m-t { font-weight: 600; font-size: 15px; }
+  .m-s { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .m-bar { height: 3px; background: var(--line); border-radius: 2px; margin: 12px 0 8px; overflow: hidden; }
+  .m-bar i { display: block; height: 100%; width: 42%; background: var(--accent); }
+  .m-info { color: var(--dim); font-size: 11px; margin-bottom: 12px; }
+  .m-btn { display: inline-block; background: var(--accent); color: var(--ink); font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; }
+  .m-lbl2 { color: var(--dim); font-size: 11px; margin: 18px 0 6px; }
+  .m-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+  .m-r { width: 62px; height: 35px; border-radius: 5px; flex: none; display: grid; place-items: center; }
+  .m-r svg { width: 16px; height: 16px; }
+  .m-row b { color: var(--dim); font-weight: 400; min-width: 16px; direction: ltr; }
+  .m-row em { margin-inline-start: auto; font-style: normal; color: var(--accent); font-size: 11px; direction: ltr; }
+
+  /* features */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+  .card .ic { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); display: grid; place-items: center; margin-bottom: 16px; color: var(--accent); }
+  .card .ic svg { width: 20px; height: 20px; }
+  .card h3 { font-size: 16px; margin-bottom: 8px; }
+  .card p { margin: 0; color: var(--dim); font-size: 15px; }
+
+  /* shortcuts */
+  .keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 36px; }
+  .key { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; color: var(--dim); }
+  kbd { font: 600 13px var(--body); color: var(--text); background: var(--card); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 7px; padding: 3px 9px; min-width: 32px; text-align: center; direction: ltr; flex: none; }
+
+  /* download */
+  .dl { background: var(--bg2); border-block: 1px solid var(--line); }
+  .dl-box { display: grid; grid-template-columns: 1.1fr .9fr; gap: 36px; align-items: center; }
+  .dl-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+  .dl-card .btn { width: 100%; }
+  .dl-meta { color: var(--dim); font-size: 14px; margin: 14px 0 0; text-align: center; min-height: 22px; }
+  .dl-links { text-align: center; margin-top: 8px; font-size: 14px; }
+  .dl-links a { color: var(--accent); }
+  .note { margin-top: 20px; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 12px; color: var(--dim); font-size: 13.5px; }
+  .steps { margin: 18px 0 0; padding: 0; list-style: none; color: var(--dim); font-size: 15px; display: grid; gap: 8px; }
+  .steps li { display: flex; gap: 10px; }
+  .steps li::before { content: "›"; color: var(--accent); }
+  [dir="rtl"] .steps li::before { content: "‹"; }
+
+  /* changelog */
+  .rels { margin-top: 36px; display: grid; gap: 16px; }
+  .rel { border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; background: var(--card); }
+  .rel-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; margin-bottom: 10px; }
+  .ver { font-family: var(--display); font-size: 18px; font-weight: 600; direction: ltr; }
+  .badge { font-size: 11px; background: var(--accent); color: var(--ink); border-radius: 999px; padding: 2px 10px; font-weight: 600; }
+  .date { color: var(--dim); font-size: 13px; margin-inline-start: auto; }
+  .rel h5 { margin: 16px 0 6px; font-size: 13px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+  [dir="rtl"] .rel h5 { letter-spacing: 0; }
+  .rel p { margin: 8px 0; color: var(--dim); }
+  .rel ul { margin: 6px 0; padding-inline-start: 20px; color: var(--text); }
+  .rel li { margin: 5px 0; font-size: 15px; }
+  .rel code { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: .9em; direction: ltr; unicode-bidi: embed; }
+  .older[hidden] { display: none; }
+  .more { margin-top: 18px; }
+  .status { color: var(--dim); font-size: 14px; margin-top: 24px; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 30px; color: var(--dim); font-size: 14px; }
+  .foot { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+  .foot .brand { color: var(--text); }
+  .foot a { text-decoration: none; }
+  .foot a:hover { color: var(--text); }
+  .foot .sp { margin-inline-start: auto; }
+
+  @media (max-width: 860px) {
+    .hero, .dl-box { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    nav { display: none; }
+    .lang { margin-inline-start: auto; }
+  }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } .date { margin-inline-start: 0; width: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .rise { animation: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="logo" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="14" fill="#14141b" stroke="rgba(173,157,133,.35)" stroke-width="1.5"/>
+      <path d="M26 18v28l22-14z" fill="none" stroke="#ad9d85" stroke-width="4" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="tri" viewBox="0 0 64 64"><path d="M24 14v36l30-18z" fill="none" stroke="#ad9d85" stroke-width="4" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <header>
+    <div class="wrap bar">
+      <a class="brand" href="#top" aria-label="Veyra Player"><svg><use href="#logo"/></svg>Veyra Player</a>
+      <nav aria-label="Main">
+        <a href="#features" data-i18n="navFeatures">Features</a>
+        <a href="#download" data-i18n="navDownload">Download</a>
+        <a href="#changelog" data-i18n="navChangelog">Changelog</a>
+      </nav>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-lang="ar" aria-pressed="false">العربية</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap hero">
+      <div class="rise">
+        <div class="eyebrow" data-i18n="eyebrow">Video player for Windows</div>
+        <h1 data-i18n="heroTitle">A video player that stays out of your way.</h1>
+        <p class="lead" data-i18n="heroText">Controls stay hidden until you press Space, so every frame is clean. Open a folder and your episodes line up in order, ready to pick up right where you left off.</p>
+        <div class="cta">
+          <a class="btn primary js-dl" href="#download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+            <span data-i18n="dlBtn">Download for Windows</span>
+          </a>
+          <a class="btn" href="#changelog" data-i18n="seeNew">See what’s new</a>
+        </div>
+        <div class="meta js-dl-meta" data-i18n="metaLoading">Checking the latest version…</div>
+      </div>
+
+      <div class="mock rise" aria-hidden="true" style="animation-delay:.12s">
+        <div class="mock-bar"><i></i><i></i><i></i><span>Veyra Player</span></div>
+        <div class="mock-body">
+          <div class="m-lbl" data-i18n="mLast">Last thing you watched</div>
+          <div class="m-hero">
+            <div class="m-th"><svg><use href="#tri"/></svg></div>
+            <div class="m-t">Sample Show</div>
+            <div class="m-s" data-i18n="mEp">Episode 5/12 — The Crossing</div>
+            <div class="m-bar"><i></i></div>
+            <div class="m-info" data-i18n="mInfo">You reached 12:34 of 23:40</div>
+            <span class="m-btn" data-i18n="mBtn">Resume from 12:34</span>
+          </div>
+          <div class="m-lbl2" data-i18n="mNext">Not watched yet</div>
+          <div class="m-row"><div class="m-r" style="background:linear-gradient(120deg,#2e2c38,#1b1b23)"><svg><use href="#tri"/></svg></div><b>6</b><span data-i18n="mE6">The Long Road</span><em>✓</em></div>
+          <div class="m-row"><div class="m-r" style="background:linear-gradient(200deg,#34302b,#1b1b23)"><svg><use href="#tri"/></svg></div><b>7</b><span data-i18n="mE7">Open Water</span></div>
+          <div class="m-row" style="border-bottom:0"><div class="m-r" style="background:linear-gradient(60deg,#2a3038,#1b1b23)"><svg><use href="#tri"/></svg></div><b>8</b><span data-i18n="mE8">Last Light</span></div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="eyebrow" data-i18n="fEyebrow">Features</div>
+        <h2 data-i18n="fTitle">Built for binge-watching</h2>
+        <div class="grid">
+          <article class="card">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M4 4l16 16"/></svg></div>
+            <h3 data-i18n="f1t">A clean screen</h3>
+            <p data-i18n="f1p">The interface is always hidden, even when you move the mouse. Press Space to show or hide it, and save screenshots with nothing in the way.</p>
+          </article>
+          <article class="card">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+            <h3 data-i18n="f2t">Folders become seasons</h3>
+            <p data-i18n="f2p">Pick a folder and every video inside shows up as an episode, sorted the right way (episode 2 before episode 10), subfolders included.</p>
+          </article>
+          <article class="card">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <h3 data-i18n="f3t">Pick up where you left off</h3>
+            <p data-i18n="f3p">The home screen shows your last episode with a thumbnail of the exact frame you stopped at, and what’s still unwatched in the folder.</p>
+          </article>
+          <article class="card">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l9 7-9 7zM17 5v14"/></svg></div>
+            <h3 data-i18n="f4t">Skip the intro</h3>
+            <p data-i18n="f4p">One key jumps past the opening. Set how many seconds to skip once and it’s remembered.</p>
+          </article>
+          <article class="card">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor"/></svg></div>
+            <h3 data-i18n="f5t">Themes you already know</h3>
+            <p data-i18n="f5p">Veyra, Dark, Light, Dracula, Nord, Solarized, Gruvbox and Catppuccin. Plain, familiar colors, and the video area always stays black.</p>
+          </article>
+          <article class="card">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9M8.5 3v2M6 9c1.5 3 4 5 7 6M12 9c-1 3-3 5-7 7M14 21l4-9 4 9M15.5 18h5"/></svg></div>
+            <h3 data-i18n="f6t">English and العربية</h3>
+            <p data-i18n="f6p">Switch the whole interface, including the right-to-left layout, from Settings. New versions install from inside the app.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="shortcuts" style="padding-top:0">
+      <div class="wrap">
+        <div class="eyebrow" data-i18n="kEyebrow">Shortcuts</div>
+        <h2 data-i18n="kTitle">Everything on the keyboard</h2>
+        <div class="keys">
+          <div class="key"><kbd data-i18n="kSpace">Space</kbd><span data-i18n="k1">Show or hide the controls</span></div>
+          <div class="key"><kbd>K</kbd><span data-i18n="k2">Play or pause</span></div>
+          <div class="key"><kbd>I</kbd><span data-i18n="k3">Skip the intro</span></div>
+          <div class="key"><kbd>N</kbd><kbd>P</kbd><span data-i18n="k4">Next or previous episode</span></div>
+          <div class="key"><kbd>S</kbd><span data-i18n="k5">Save a clean screenshot</span></div>
+          <div class="key"><kbd>B</kbd><span data-i18n="k6">Back to the home screen</span></div>
+          <div class="key"><kbd>H</kbd><span data-i18n="k7">Watch history</span></div>
+          <div class="key"><kbd>F</kbd><span data-i18n="k8">Fullscreen</span></div>
+          <div class="key"><kbd>,</kbd><span data-i18n="k9">Settings</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="dl">
+      <div class="wrap dl-box">
+        <div>
+          <div class="eyebrow" data-i18n="dEyebrow">Download</div>
+          <h2 data-i18n="dTitle">Get Veyra Player</h2>
+          <p class="lead" data-i18n="dText">For Windows 10 and 11 (64-bit). The installer creates shortcuts and adds Veyra Player to “Open with” for video files.</p>
+          <ul class="steps">
+            <li data-i18n="dS1">Run the installer and follow the steps.</li>
+            <li data-i18n="dS2">Open a folder of episodes, or double-click any video.</li>
+            <li data-i18n="dS3">Later, update from inside the app: Settings, then Check for updates.</li>
+          </ul>
+          <div class="note" data-i18n="dNote">Windows may show a SmartScreen warning because the installer isn’t code-signed yet. Click “More info”, then “Run anyway”.</div>
+        </div>
+        <div class="dl-card">
+          <a class="btn primary js-dl" href="#download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+            <span data-i18n="dlBtn">Download for Windows</span>
+          </a>
+          <p class="dl-meta js-dl-meta" data-i18n="metaLoading">Checking the latest version…</p>
+          <div class="dl-links"><a class="js-all" href="#changelog" data-i18n="allRel">All releases on GitHub</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="changelog">
+      <div class="wrap">
+        <div class="eyebrow" data-i18n="cEyebrow">Changelog</div>
+        <h2 data-i18n="cTitle">What’s new</h2>
+        <div class="rels" id="rels"></div>
+        <button class="btn more" id="moreBtn" type="button" hidden></button>
+        <p class="status" id="relStatus" data-i18n="cLoading">Loading releases…</p>
+        <noscript><p class="status">This page needs JavaScript to load the latest releases.</p></noscript>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="brand"><svg width="26" height="26"><use href="#logo"/></svg>Veyra Player</span>
+      <span id="year"></span>
+      <a class="sp js-all" href="#changelog" data-i18n="allRel">All releases on GitHub</a>
+    </div>
+  </footer>
+
+<script>
+(() => {
+  /* ===== Settings: change these two values if your repository name changes ===== */
+  const CONFIG = { owner: 'nova-faye', repo: 'veyra-updates' };
+  const API = 'https://api.github.com/repos/' + CONFIG.owner + '/' + CONFIG.repo + '/releases';
+  const RELEASES_URL = 'https://github.com/' + CONFIG.owner + '/' + CONFIG.repo + '/releases';
+
+  const T = {
+    en: {
+      navFeatures: 'Features', navDownload: 'Download', navChangelog: 'Changelog',
+      eyebrow: 'Video player for Windows',
+      heroTitle: 'A video player that stays out of your way.',
+      heroText: 'Controls stay hidden until you press Space, so every frame is clean. Open a folder and your episodes line up in order, ready to pick up right where you left off.',
+      dlBtn: 'Download for Windows', seeNew: 'See what’s new',
+      metaLoading: 'Checking the latest version…', metaReady: 'Version {v} · {mb} MB · Windows 10/11', metaFallback: 'Download the latest version from GitHub',
+      mLast: 'Last thing you watched', mEp: 'Episode 5/12 — The Crossing', mInfo: 'You reached 12:34 of 23:40', mBtn: 'Resume from 12:34',
+      mNext: 'Not watched yet', mE6: 'The Long Road', mE7: 'Open Water', mE8: 'Last Light',
+      fEyebrow: 'Features', fTitle: 'Built for binge-watching',
+      f1t: 'A clean screen', f1p: 'The interface is always hidden, even when you move the mouse. Press Space to show or hide it, and save screenshots with nothing in the way.',
+      f2t: 'Folders become seasons', f2p: 'Pick a folder and every video inside shows up as an episode, sorted the right way (episode 2 before episode 10), subfolders included.',
+      f3t: 'Pick up where you left off', f3p: 'The home screen shows your last episode with a thumbnail of the exact frame you stopped at, and what’s still unwatched in the folder.',
+      f4t: 'Skip the intro', f4p: 'One key jumps past the opening. Set how many seconds to skip once and it’s remembered.',
+      f5t: 'Themes you already know', f5p: 'Veyra, Dark, Light, Dracula, Nord, Solarized, Gruvbox and Catppuccin. Plain, familiar colors, and the video area always stays black.',
+      f6t: 'English and العربية', f6p: 'Switch the whole interface, including the right-to-left layout, from Settings. New versions install from inside the app.',
+      kEyebrow: 'Shortcuts', kTitle: 'Everything on the keyboard', kSpace: 'Space',
+      k1: 'Show or hide the controls', k2: 'Play or pause', k3: 'Skip the intro', k4: 'Next or previous episode', k5: 'Save a clean screenshot',
+      k6: 'Back to the home screen', k7: 'Watch history', k8: 'Fullscreen', k9: 'Settings',
+      dEyebrow: 'Download', dTitle: 'Get Veyra Player',
+      dText: 'For Windows 10 and 11 (64-bit). The installer creates shortcuts and adds Veyra Player to “Open with” for video files.',
+      dS1: 'Run the installer and follow the steps.', dS2: 'Open a folder of episodes, or double-click any video.',
+      dS3: 'Later, update from inside the app: Settings, then Check for updates.',
+      dNote: 'Windows may show a SmartScreen warning because the installer isn’t code-signed yet. Click “More info”, then “Run anyway”.',
+      allRel: 'All releases on GitHub',
+      cEyebrow: 'Changelog', cTitle: 'What’s new', cLoading: 'Loading releases…',
+      cError: 'Couldn’t load the latest releases right now. Showing the built-in history instead.',
+      cLatest: 'Latest', cShowOlder: 'Show older versions', cHideOlder: 'Hide older versions', cNone: 'No releases published yet.'
+    },
+    ar: {
+      navFeatures: 'المميزات', navDownload: 'التحميل', navChangelog: 'سجل التغييرات',
+      eyebrow: 'مشغل فيديو لويندوز',
+      heroTitle: 'مشغل فيديو ما يقف في طريقك.',
+      heroText: 'الواجهة تبقى مخفية لين تضغط مسافة، فتطلع كل لقطة نظيفة. افتح مجلد وتترتب حلقاتك تلقائياً، وكمّل من وين وقفت.',
+      dlBtn: 'حمّل لويندوز', seeNew: 'شوف الجديد',
+      metaLoading: 'جاري التحقق من آخر نسخة…', metaReady: 'الإصدار {v} · {mb} ميجا · ويندوز 10/11', metaFallback: 'حمّل آخر نسخة من GitHub',
+      mLast: 'آخر شي شغلته', mEp: 'الحلقة 5/12 — العبور', mInfo: 'وصلت إلى 12:34 من 23:40', mBtn: 'كمّل من 12:34',
+      mNext: 'الحلقات اللي ما تابعتها', mE6: 'الطريق الطويل', mE7: 'المياه المفتوحة', mE8: 'آخر ضوء',
+      fEyebrow: 'المميزات', fTitle: 'مصمم لمتابعة المسلسلات',
+      f1t: 'شاشة نظيفة', f1p: 'الواجهة مخفية دايماً حتى لو حركت الماوس. اضغط مسافة تظهر وتختفي، وخذ لقطاتك بدون أي شي يغطي الصورة.',
+      f2t: 'المجلدات تصير مواسم', f2p: 'اختر مجلد وكل فيديو فيه يطلع كحلقة، مرتبة بالطريقة الصحيحة (حلقة 2 قبل حلقة 10)، مع المجلدات الفرعية.',
+      f3t: 'كمّل من وين وقفت', f3p: 'الصفحة الرئيسية تعرض آخر حلقة مع صورة اللقطة اللي وقفت عندها بالضبط، وتحتها الحلقات اللي ما شفتها في المجلد.',
+      f4t: 'تخطي الانترو', f4p: 'زر واحد يقفز فوق المقدمة. حدد عدد الثواني مرة وحدة وتنحفظ.',
+      f5t: 'ثيمات تعرفها', f5p: 'Veyra، Dark، Light، Dracula، Nord، Solarized، Gruvbox، Catppuccin. ألوان عادية ومألوفة، وخلفية الفيديو تبقى سوداء دايماً.',
+      f6t: 'العربية والإنجليزية', f6p: 'غيّر لغة الواجهة كاملة، مع اتجاه الكتابة من اليمين لليسار، من الإعدادات. والنسخ الجديدة تتثبت من داخل البرنامج.',
+      kEyebrow: 'الاختصارات', kTitle: 'كل شي من الكيبورد', kSpace: 'مسافة',
+      k1: 'إظهار أو إخفاء الواجهة', k2: 'تشغيل أو إيقاف', k3: 'تخطي الانترو', k4: 'الحلقة التالية أو السابقة', k5: 'حفظ لقطة نظيفة',
+      k6: 'الرجوع للصفحة الرئيسية', k7: 'سجل المشاهدة', k8: 'ملء الشاشة', k9: 'الإعدادات',
+      dEyebrow: 'التحميل', dTitle: 'حمّل Veyra Player',
+      dText: 'لويندوز 10 و11 (64 بت). المثبّت يسوي اختصارات ويضيف Veyra Player لقائمة «فتح باستخدام» لملفات الفيديو.',
+      dS1: 'شغّل المثبّت واتبع الخطوات.', dS2: 'افتح مجلد حلقات، أو اضغط دبل كليك على أي فيديو.',
+      dS3: 'بعدها تحدّث من داخل البرنامج: الإعدادات ثم تحقق من التحديثات.',
+      dNote: 'ممكن يطلع لك تحذير SmartScreen من ويندوز لأن المثبّت غير موقّع رقمياً بعد. اضغط «مزيد من المعلومات» ثم «تشغيل على أي حال».',
+      allRel: 'كل الإصدارات على GitHub',
+      cEyebrow: 'سجل التغييرات', cTitle: 'وش الجديد', cLoading: 'جاري تحميل الإصدارات…',
+      cError: 'ما قدرت أحمّل آخر الإصدارات الحين. أعرض لك السجل المدمج بدلها.',
+      cLatest: 'الأحدث', cShowOlder: 'عرض الإصدارات الأقدم', cHideOlder: 'إخفاء الإصدارات الأقدم', cNone: 'ما فيه إصدارات منشورة بعد.'
+    }
+  };
+
+  /* Built-in history, shown if GitHub can't be reached or has no releases yet */
+  const FALLBACK = [
+    { v: '1.5.1', en: ['Veyra Player branding: new name, new icon and the default Veyra theme.'], ar: ['هوية Veyra Player: اسم جديد وأيقونة جديدة والثيم الأساسي Veyra.'] },
+    { v: '1.4.0', en: ['Episode thumbnails: the exact frame you stopped at, or a random frame for the rest.', 'Faster, more reliable screenshots.'], ar: ['صور مصغرة للحلقات: اللقطة اللي وقفت عندها بالضبط، أو لقطة عشوائية لباقي الحلقات.', 'لقطات أسرع وأكثر ثباتاً.'] },
+    { v: '1.3.0', en: ['New home screen with recent episodes and the ones you haven’t watched yet.', '8 themes: Dark, Light, Dracula, Nord, Solarized Dark, Solarized Light, Gruvbox and Catppuccin.'], ar: ['صفحة رئيسية جديدة فيها آخر الحلقات والحلقات اللي ما تابعتها.', '8 ثيمات: Dark، Light، Dracula، Nord، Solarized Dark، Solarized Light، Gruvbox، Catppuccin.'] },
+    { v: '1.2.0', en: ['English is now the default language, with Arabic available from Settings.', 'Fixed the automatic update check.'], ar: ['الإنجليزي صار اللغة الافتراضية والعربي من الإعدادات.', 'إصلاح التحقق التلقائي من التحديثات.'] },
+    { v: '1.1.0', en: ['Settings page with in-app updates.'], ar: ['صفحة إعدادات مع التحديث من داخل البرنامج.'] },
+    { v: '1.0.0', en: ['First release: hidden controls, episode folders, skip intro, resume and history.'], ar: ['أول إصدار: واجهة مخفية، مجلدات حلقات، تخطي الانترو، استكمال وسجل.'] }
+  ];
+
+  let lang = 'en';
+  try { lang = localStorage.getItem('vp-lang') === 'ar' ? 'ar' : 'en'; } catch {}
+  let state = 'loading';           // loading | ok | error
+  let releases = [];
+  let olderOpen = false;
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const t = (k, vars) => {
+    let s = (T[lang] && T[lang][k]) || T.en[k] || k;
+    if (vars) for (const x in vars) s = s.split('{' + x + '}').join(vars[x]);
+    return s;
+  };
+
+  /* very small, safe markdown renderer for release notes */
+  function md(src) {
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const inline = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    const out = []; let list = false;
+    for (const raw of String(src || '').replace(/\r/g, '').split('\n')) {
+      const line = raw.trim();
+      if (/^```/.test(line)) continue;
+      const li = /^[-*]\s+(.*)/.exec(line);
+      if (li) { if (!list) { out.push('<ul>'); list = true; } out.push('<li>' + inline(li[1]) + '</li>'); continue; }
+      if (list) { out.push('</ul>'); list = false; }
+      if (!line) continue;
+      const hd = /^(#{1,6})\s+(.*)/.exec(line);
+      if (hd) { if (hd[1].length >= 3) out.push('<h5>' + inline(hd[2]) + '</h5>'); continue; }   // h1/h2 repeat the version, skip them
+      out.push('<p>' + inline(line) + '</p>');
+    }
+    if (list) out.push('</ul>');
+    return out.join('');
+  }
+
+  const fmtDate = iso => {
+    try { return new Date(iso).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
+    catch { return ''; }
+  };
+  const cleanVer = tag => String(tag || '').replace(/^v/i, '');
+
+  function latest() { return releases.find(r => !r.prerelease) || releases[0] || null; }
+  function installer(rel) {
+    return rel && (rel.assets || []).find(a => /\.exe$/i.test(a.name) && !/blockmap/i.test(a.name));
+  }
+
+  function renderDownload() {
+    const rel = state === 'ok' ? latest() : null;
+    const asset = installer(rel);
+    let href = RELEASES_URL, meta = t('metaFallback');
+    if (state === 'loading') meta = t('metaLoading');
+    if (asset) {
+      href = asset.browser_download_url;
+      meta = t('metaReady', { v: cleanVer(rel.tag_name), mb: Math.max(1, Math.round(asset.size / 1048576)) });
+    }
+    $$('.js-dl').forEach(a => { a.href = href; if (asset) a.setAttribute('download', ''); else a.removeAttribute('download'); });
+    $$('.js-dl-meta').forEach(el => { el.textContent = meta; });
+    $$('.js-all').forEach(a => { a.href = RELEASES_URL; a.target = '_blank'; a.rel = 'noopener'; });
+  }
+
+  function relCard(r, isLatest) {
+    const el = document.createElement('article'); el.className = 'rel';
+    const head = document.createElement('div'); head.className = 'rel-head';
+    const v = document.createElement('span'); v.className = 'ver'; v.textContent = 'v' + r.version;
+    head.append(v);
+    if (isLatest) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = t('cLatest'); head.append(b); }
+    if (r.date) { const d = document.createElement('span'); d.className = 'date'; d.textContent = fmtDate(r.date); head.append(d); }
+    const body = document.createElement('div'); body.className = 'rel-body'; body.innerHTML = r.html;
+    el.append(head, body);
+    return el;
+  }
+
+  function renderLog() {
+    const box = $('#rels'), more = $('#moreBtn'), status = $('#relStatus');
+    box.innerHTML = '';
+    let items = [];
+    if (state === 'ok' && releases.length) {
+      items = releases.map(r => ({ version: cleanVer(r.tag_name), date: r.published_at, html: md(r.body) || '<p>—</p>' }));
+      status.hidden = true;
+    } else if (state === 'loading') {
+      status.hidden = false; status.textContent = t('cLoading');
+    } else {
+      items = FALLBACK.map(f => ({ version: f.v, date: null, html: '<ul>' + f[lang].map(x => '<li>' + x.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</li>').join('') + '</ul>' }));
+      status.hidden = false;
+      status.textContent = state === 'error' ? t('cError') : t('cNone');
+    }
+    const SHOW = 3;
+    items.forEach((it, i) => {
+      const card = relCard(it, i === 0 && state === 'ok');
+      if (i >= SHOW) { card.classList.add('older'); card.hidden = !olderOpen; }
+      box.append(card);
+    });
+    more.hidden = items.length <= SHOW;
+    more.textContent = olderOpen ? t('cHideOlder') : t('cShowOlder');
+  }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    $$('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('#year').textContent = '© ' + new Date().getFullYear();
+    renderDownload();
+    renderLog();
+  }
+
+  $$('.lang button').forEach(b => b.addEventListener('click', () => {
+    lang = b.dataset.lang;
+    try { localStorage.setItem('vp-lang', lang); } catch {}
+    applyLang();
+  }));
+  $('#moreBtn').addEventListener('click', () => {
+    olderOpen = !olderOpen;
+    $$('.rel.older').forEach(c => { c.hidden = !olderOpen; });
+    $('#moreBtn').textContent = olderOpen ? t('cHideOlder') : t('cShowOlder');
+  });
+
+  const slim = r => ({
+    tag_name: r.tag_name, body: r.body, published_at: r.published_at, prerelease: r.prerelease,
+    assets: (r.assets || []).map(a => ({ name: a.name, size: a.size, browser_download_url: a.browser_download_url }))
+  });
+
+  async function load() {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem('vp-rel') || 'null');
+      if (cached && Date.now() - cached.t < 600000) return cached.data;
+    } catch {}
+    const res = await fetch(API, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = (await res.json()).filter(r => !r.draft).map(slim);
+    try { sessionStorage.setItem('vp-rel', JSON.stringify({ t: Date.now(), data })); } catch {}
+    return data;
+  }
+
+  applyLang();
+  load().then(data => {
+    releases = data;
+    state = data.length ? 'ok' : 'empty';
+  }).catch(() => { state = 'error'; }).finally(applyLang);
+})();
+</script>
+</body>
+</html>
